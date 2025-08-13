@@ -13,10 +13,12 @@
   }
   
   .container {
+    position: relative;
     background: white;
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden; /* Чтобы изображения не вылезали за границы */
   }
   
   h2 {
@@ -30,7 +32,7 @@
     color: #555;
   }
   
-  input { 
+  input[type="number"] { 
     margin: 5px 0 15px 0; 
     width: 100%; 
     padding: 10px; 
@@ -68,24 +70,75 @@
     border-radius: 5px;
     background-color: #f9f9f9;
   }
+
+  /* Стили для изображений */
+  .side-logo {
+    position: absolute;
+    width: 100px; /* Установите желаемый размер */
+    height: auto;
+    z-index: 0; /* Убедитесь, что изображения находятся под содержимым */
+  }
+
+  .left-logo {
+    top: 20px; /* Расстояние от верха */
+    left: -120px; /* Смещение за пределы контейнера слева */
+    transform: rotate(15deg); /* Добавим небольшой наклон для стиля */
+  }
+
+  .right-logo {
+    bottom: 20px; /* Расстояние от низа */
+    right: -120px; /* Смещение за пределы контейнера справа */
+    transform: rotate(-15deg); /* Другой наклон для разнообразия */
+  }
+
+  /* Поддержка адаптивности */
+  @media (max-width: 600px) {
+    .side-logo {
+      display: none; /* Скрываем изображения на маленьких экранах */
+    }
+  }
+
+  /* Стили для радио-кнопок */
+  .radio-group {
+    margin-bottom: 15px;
+  }
+
+  .radio-group label {
+    font-weight: normal;
+    margin-right: 20px;
+  }
 </style>
 </head>
 <body>
 <div class="container">
-<h2>Калькулятор сложного процента</h2>
+  <!-- Изображение слева -->
+  <img src="logo1.png" alt="Logo 1" class="side-logo left-logo">
+  
+  <h2>Калькулятор сложного процента</h2>
 
-<label>Начальная сумма:</label><br>
-<input type="number" id="principal" value="100" step="0.01"><br>
+  <label>Начальная сумма:</label><br>
+  <input type="number" id="principal" value="100" step="0.01"><br>
 
-<label>Дневная ставка (%):</label><br>
-<input type="number" id="rate" value="1.8" step="0.01"><br>
+  <label>Дневная ставка (%):</label><br>
+  <input type="number" id="rate" value="1.8" step="0.01"><br>
 
-<label>Количество дней:</label><br>
-<input type="number" id="days" value="30" min="1"><br>
+  <label>Количество дней:</label><br>
+  <input type="number" id="days" value="30" min="1"><br>
 
-<button onclick="calculate()">Посчитать</button>
+  <div class="radio-group">
+    <label>Тип расчета:</label><br>
+    <input type="radio" id="compound" name="interestType" value="compound" checked>
+    <label for="compound">С реинвестированием (сложный процент)</label><br>
+    <input type="radio" id="simple" name="interestType" value="simple">
+    <label for="simple">Без реинвестирования (простой процент)</label>
+  </div>
 
-<div id="result"></div>
+  <button onclick="calculate()">Посчитать</button>
+
+  <div id="result"></div>
+  
+  <!-- Изображение справа -->
+  <img src="logo2.png" alt="Logo 2" class="side-logo right-logo">
 </div>
 
 <script>
@@ -93,6 +146,7 @@ function calculate() {
   let P = parseFloat(document.getElementById('principal').value);
   let rate = parseFloat(document.getElementById('rate').value) / 100;
   let days = parseInt(document.getElementById('days').value);
+  let interestType = document.querySelector('input[name="interestType"]:checked').value;
   
   // Проверка на корректность ввода
   if (isNaN(P) || P <= 0) {
@@ -110,12 +164,24 @@ function calculate() {
     return;
   }
   
-  // Расчет сложного процента: A = P(1 + r)^t
-  let A = P * Math.pow(1 + rate, days);
-  let profit = A - P;
+  let A, profit, typeText;
+  
+  if (interestType === 'compound') {
+    // Сложный процент: A = P(1 + r)^t
+    A = P * Math.pow(1 + rate, days);
+    typeText = 'С реинвестированием (сложный процент)';
+  } else {
+    // Простой процент: A = P + P * r * t
+    profit = P * rate * days;
+    A = P + profit;
+    typeText = 'Без реинвестирования (простой процент)';
+  }
+  
+  profit = A - P;
   
   document.getElementById('result').innerHTML = `
     <div style="color: green; font-weight: bold;">
+      <p>Тип расчета: ${typeText}</p>
       <p>Начальная сумма: ${P.toFixed(2)} USDT.</p>
       <p>Через ${days} дней сумма будет: <strong>${A.toFixed(2)} USDT.</strong></p>
       <p>Прибыль: <strong>${profit.toFixed(2)} USDT.</strong></p>
